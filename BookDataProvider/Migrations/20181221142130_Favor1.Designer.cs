@@ -4,14 +4,16 @@ using BookDataProvider;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BookDataProvider.Migrations
 {
     [DbContext(typeof(BookDBContext))]
-    partial class BookDBContextModelSnapshot : ModelSnapshot
+    [Migration("20181221142130_Favor1")]
+    partial class Favor1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -77,8 +79,6 @@ namespace BookDataProvider.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Name");
-
-                    b.Property<int>("Order");
 
                     b.Property<string>("Url");
 
@@ -156,46 +156,6 @@ namespace BookDataProvider.Migrations
                     b.ToTable("JobLog");
                 });
 
-            modelBuilder.Entity("BookDataProvider.Entities.QueryLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("BooksFetched");
-
-                    b.Property<int?>("CategoryId");
-
-                    b.Property<DateTime>("DateFrom");
-
-                    b.Property<DateTime>("DateTo");
-
-                    b.Property<DateTime>("QueryAt");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("QueryLog");
-                });
-
-            modelBuilder.Entity("BookDataProvider.Entities.WishItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<DateTime>("AddedAt");
-
-                    b.Property<int?>("BookId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookId");
-
-                    b.ToTable("WishList");
-                });
-
             modelBuilder.Entity("BookDataProvider.Entities.Book", b =>
                 {
                     b.HasOne("BookDataProvider.Entities.Category", "Category")
@@ -215,20 +175,6 @@ namespace BookDataProvider.Migrations
                     b.HasOne("BookDataProvider.Entities.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId");
-                });
-
-            modelBuilder.Entity("BookDataProvider.Entities.QueryLog", b =>
-                {
-                    b.HasOne("BookDataProvider.Entities.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId");
-                });
-
-            modelBuilder.Entity("BookDataProvider.Entities.WishItem", b =>
-                {
-                    b.HasOne("BookDataProvider.Entities.Book", "Book")
-                        .WithMany()
-                        .HasForeignKey("BookId");
                 });
 #pragma warning restore 612, 618
         }

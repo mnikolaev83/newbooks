@@ -4,14 +4,16 @@ using BookDataProvider;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BookDataProvider.Migrations
 {
     [DbContext(typeof(BookDBContext))]
-    partial class BookDBContextModelSnapshot : ModelSnapshot
+    [Migration("20181221153043_Wish1")]
+    partial class Wish1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -77,8 +79,6 @@ namespace BookDataProvider.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Name");
-
-                    b.Property<int>("Order");
 
                     b.Property<string>("Url");
 
@@ -156,29 +156,6 @@ namespace BookDataProvider.Migrations
                     b.ToTable("JobLog");
                 });
 
-            modelBuilder.Entity("BookDataProvider.Entities.QueryLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("BooksFetched");
-
-                    b.Property<int?>("CategoryId");
-
-                    b.Property<DateTime>("DateFrom");
-
-                    b.Property<DateTime>("DateTo");
-
-                    b.Property<DateTime>("QueryAt");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("QueryLog");
-                });
-
             modelBuilder.Entity("BookDataProvider.Entities.WishItem", b =>
                 {
                     b.Property<int>("Id")
@@ -211,13 +188,6 @@ namespace BookDataProvider.Migrations
                 });
 
             modelBuilder.Entity("BookDataProvider.Entities.IgnoreItem", b =>
-                {
-                    b.HasOne("BookDataProvider.Entities.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId");
-                });
-
-            modelBuilder.Entity("BookDataProvider.Entities.QueryLog", b =>
                 {
                     b.HasOne("BookDataProvider.Entities.Category", "Category")
                         .WithMany()

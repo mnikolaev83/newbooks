@@ -24,7 +24,11 @@ namespace BookDataProvider
             base.OnModelCreating(builder);
         }
         public DbSet<Book> Books { get; set; }
+        public DbSet<IgnoreItem> IgnoreList { get; set; }
+        public DbSet<FavoriteItem> FavoriteList { get; set; }
+        public DbSet<WishItem> WishList { get; set; }
         public DbSet<JobLog> JobLog { get; set; }
+        public DbSet<QueryLog> QueryLog { get; set; }
         public DbSet<Category> Categories { get; set; }
     }
 }

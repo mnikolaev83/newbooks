@@ -6,11 +6,10 @@ using System.Text;
 
 namespace BookDataProvider.Entities
 {
-    public class Category
+    public class WishItem
     {
         public int Id { get; set; }
-        public int Order { get; set; }
-        public string Url { get; set; }
-        public string Name { get; set; }
+        public Book Book { get; set; }
+        public DateTime AddedAt { get; set; } = DateTime.Now;
     }
 }

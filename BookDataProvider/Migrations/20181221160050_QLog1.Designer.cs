@@ -4,14 +4,16 @@ using BookDataProvider;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BookDataProvider.Migrations
 {
     [DbContext(typeof(BookDBContext))]
-    partial class BookDBContextModelSnapshot : ModelSnapshot
+    [Migration("20181221160050_QLog1")]
+    partial class QLog1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -77,8 +79,6 @@ namespace BookDataProvider.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Name");
-
-                    b.Property<int>("Order");
 
                     b.Property<string>("Url");
 
