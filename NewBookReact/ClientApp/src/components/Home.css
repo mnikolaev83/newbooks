@@ -1,0 +1,205 @@
+﻿button {
+    cursor: pointer
+}
+
+body {
+    font-size: 1vw;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.top-form {
+    min-height: 50px;
+    z-index: 10000;
+    background-color: #004400;
+    border-bottom: 2px solid black;
+    color: white;
+    padding-top: 15px;
+    padding-left: 30px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    font-size: 1vw;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+}
+
+    .top-form select {
+        color: black;
+        font-family: Tahoma
+    }
+
+div.react-datepicker__input-container input {
+    width: 7vw;
+    padding-left: 5px;
+}
+
+select, input {
+    font-size: 0.9vw;
+    border-radius: 3px;
+    border: 1px solid #000000;
+    padding: 2px;
+    background-color: #eeffee;
+    margin-left: 0.5vw;
+    margin-right: 0.5vw;
+}
+
+button.search-button {
+    border: 1px solid black;
+    border-radius: 3px;
+    padding: 2px;
+    padding-left: 1vw;
+    padding-right: 1vw;
+    background-color: #AAFFFF;
+    cursor: pointer;
+}
+
+img.book_cover {
+    width: 100%;
+}
+
+div.book-area {
+    padding-top: 70px;
+    background-color: #eeffee;
+}
+
+span.author-name {
+    font-size: 1.2vw;
+    color: #000000;
+}
+
+span.book-title {
+    margin-left: 1vw;
+    font-weight: bold;
+    font-size: 1.2vw;
+    color: #004400;
+}
+
+span.subcategory {
+    font-size: 0.8vw;
+    color: #000000;
+}
+
+span.target {
+    margin-left: 1vw;
+    font-size: 0.8vw;
+    color: #aaaaaa;
+}
+
+
+span.publisher {
+    font-weight: bold;
+    text-decoration: underline;
+    font-size: 0.8vw;
+    color: #000000;
+}
+
+span.series {
+    margin-left: 1vw;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 0.8vw;
+    color: #00AA00;
+}
+
+span.isbn {
+    margin-left: 1vw;
+    font-size: 0.5vw;
+    color: #AAAAAA;
+}
+
+span.description {
+    font-size: 1vw;
+    color: #000000;
+}
+
+
+div.book {
+    margin-right: 0px !important;
+    margin-left: 0.2vw;
+    padding: 1vw;
+    border-bottom: 3px solid #55aa55
+}
+
+    div.book.favorite {
+        background-color: #AAFFFF;
+    }
+
+span.booksShown {
+    font-weight: bold;
+}
+
+span.booksIgnored {
+    margin-left: 1vw;
+    font-weight: bold;
+    color: #ff0000;
+}
+
+span.booksFavorite {
+    margin-left: 1vw;
+    font-weight: bold;
+    color: #AAFFFF;
+}
+
+div.man-buttons {
+    margin-top: 3vw;
+}
+
+div.left-icons {
+    font-size: 1.5vw;
+    cursor: pointer;
+}
+
+    div.left-icons.cart-plus {
+        color: #0000AA;
+    }
+
+    div.left-icons.cart-minus {
+        color: #AA0000;
+    }
+
+    div.left-icons.ban {
+        color: #AA0000;
+    }
+
+    div.left-icons.heart {
+        color: #009900;
+    }
+
+div.popup-fade {
+    z-index: 20000 !important;
+    min-height: 100%;
+    min-width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: black;
+    opacity: 0.9;
+}
+
+div.popup-book-ignore {
+    z-index: 21000 !important;
+    min-height: 40vh;
+    min-width: 50vw;
+    position: absolute;
+    top: 30vh;
+    left: 25vw;
+    background-color: #ffeeee;
+    border: 5px solid #440000;
+    padding: 15px;
+}
+    div.popup-book-ignore button {
+        background-color: #440000;
+        border: 2px solid #ffffff;
+        color: white;
+        font-weight: bold;
+        padding: 5px;
+        font-size: 0.8vw;
+    }
+
+div.popup-book-ignore .row {
+    padding: 5px;
+}

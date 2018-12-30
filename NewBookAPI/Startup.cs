@@ -24,6 +24,7 @@ namespace NewBookAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+            services.AddCors();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -33,7 +34,8 @@ namespace NewBookAPI
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseCors(builder =>
+               builder.WithOrigins("*"));
             app.UseMvc();
         }
     }

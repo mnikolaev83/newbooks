@@ -15,45 +15,69 @@ namespace NewBookAPI.Controllers
     {
         private bool IsInIgnoreList(Book book, List<IgnoreItem> ignoreList)
         {
+            var bookSeries = String.Empty;
+            if (!String.IsNullOrWhiteSpace(book.Series))
+                bookSeries = book.Series;
+            var bookSubcategory = String.Empty;
+            if (!String.IsNullOrWhiteSpace(book.Subcategory))
+                bookSubcategory = book.Subcategory;
+            var bookPublisher = String.Empty;
+            if (!String.IsNullOrWhiteSpace(book.Publisher))
+                bookPublisher = book.Publisher;
+            var bookTarget = String.Empty;
+            if (!String.IsNullOrWhiteSpace(book.Target))
+                bookTarget = book.Target;
             foreach (var item in ignoreList)
             {
                 if (item.Category != null)
                     if (item.Category.Id != book.Category.Id)
                         continue;
                 if (!String.IsNullOrWhiteSpace(item.Series))
-                    if (item.Series.Trim() != book.Series.Trim())
+                    if (item.Series.Trim() != bookSeries.Trim())
                         continue;
                 if (!String.IsNullOrWhiteSpace(item.Subcategory))
-                    if (item.Subcategory.Trim() != book.Subcategory.Trim())
+                    if (item.Subcategory.Trim() != bookSubcategory.Trim())
                         continue;
                 if (!String.IsNullOrWhiteSpace(item.Target))
-                    if (item.Target.Trim() != book.Target.Trim())
+                    if (item.Target.Trim() != bookTarget.Trim())
                         continue;
                 if (!String.IsNullOrWhiteSpace(item.Publisher))
-                    if (item.Publisher.Trim() != book.Publisher.Trim())
+                    if (item.Publisher.Trim() != bookPublisher.Trim())
                         continue;
                 return true;
             }
             return false;
         }
-        private bool IsInFavoriteList(Book book, List<FavoriteItem> ignoreList)
+        private bool IsInFavoriteList(Book book, List<FavoriteItem> favoriteList)
         {
-            foreach (var item in ignoreList)
+            var bookSeries = String.Empty;
+            if (!String.IsNullOrWhiteSpace(book.Series))
+                bookSeries = book.Series;
+            var bookSubcategory = String.Empty;
+            if (!String.IsNullOrWhiteSpace(book.Subcategory))
+                bookSubcategory = book.Subcategory;
+            var bookPublisher = String.Empty;
+            if (!String.IsNullOrWhiteSpace(book.Publisher))
+                bookPublisher = book.Publisher;
+            var bookTarget = String.Empty;
+            if (!String.IsNullOrWhiteSpace(book.Target))
+                bookTarget = book.Target;
+            foreach (var item in favoriteList)
             {
                 if (item.Category != null)
                     if (item.Category.Id != book.Category.Id)
                         continue;
                 if (!String.IsNullOrWhiteSpace(item.Series))
-                    if (!book.Series.ToLower().Trim().Contains(item.Series.ToLower().Trim()))
+                    if (!bookSeries.ToLower().Trim().Contains(item.Series.ToLower().Trim()))
                         continue;
                 if (!String.IsNullOrWhiteSpace(item.Subcategory))
-                    if (!book.Subcategory.ToLower().Trim().Contains(item.Subcategory.ToLower().Trim()))
+                    if (!bookSubcategory.ToLower().Trim().Contains(item.Subcategory.ToLower().Trim()))
                         continue;
                 if (!String.IsNullOrWhiteSpace(item.Target))
-                    if (!book.Target.ToLower().Trim().Contains(item.Target.ToLower().Trim()))
+                    if (!bookTarget.ToLower().Trim().Contains(item.Target.ToLower().Trim()))
                         continue;
                 if (!String.IsNullOrWhiteSpace(item.Publisher))
-                    if (!book.Publisher.ToLower().Trim().Contains(item.Publisher.ToLower().Trim()))
+                    if (!bookPublisher.ToLower().Trim().Contains(item.Publisher.ToLower().Trim()))
                         continue;
                 return true;
             }
@@ -198,6 +222,52 @@ namespace NewBookAPI.Controllers
                     db.SaveChanges();
 
                 }
+                return true;
+            }
+        }
+        [Route("ignore")]
+        [HttpGet]
+        public bool Ignore(IgnoreModel model)
+        {
+            using (var db = new BookDBContext())
+            {
+                var publisher = String.Empty;
+                if (!String.IsNullOrWhiteSpace(model.publisher))
+                    publisher = model.publisher.Trim();
+                var series = String.Empty;
+                if (!String.IsNullOrWhiteSpace(model.series))
+                    series = model.series.Trim();
+                var subcategory = String.Empty;
+                if (!String.IsNullOrWhiteSpace(model.subcategory))
+                    subcategory = model.subcategory.Trim();
+                var target = String.Empty;
+                if (!String.IsNullOrWhiteSpace(model.target))
+                    target = model.target.Trim();
+
+
+                var existingItem = db.IgnoreList.
+                    Include(x => x.Category).
+                    Where(
+                    x =>
+                    ((model.category_id > 0) ? x.Category.Id == model.category_id : true) &&
+                    (
+                        ((!String.IsNullOrWhiteSpace(publisher) && !String.IsNullOrWhiteSpace(x.Publisher))) ? x.Publisher.Trim() == publisher.Trim() : true) &&
+                    (((!String.IsNullOrWhiteSpace(series) && !String.IsNullOrWhiteSpace(x.Series))) ? x.Series.Trim() == series.Trim() : true) &&
+                    (((!String.IsNullOrWhiteSpace(subcategory) && !String.IsNullOrWhiteSpace(x.Subcategory))) ? x.Subcategory.Trim() == subcategory.Trim() : true) &&
+                    (((!String.IsNullOrWhiteSpace(target) && !String.IsNullOrWhiteSpace(x.Target))) ? x.Target.Trim() == target.Trim() : true)
+                    ).
+                    FirstOrDefault();
+                if (existingItem != null)
+                    return true;
+                db.IgnoreList.Add(new IgnoreItem()
+                {
+                    Category = (model.category_id > 0) ? db.Categories.Where(x => x.Id == model.category_id).FirstOrDefault() : null,
+                    Publisher = (!String.IsNullOrWhiteSpace(publisher)) ? publisher : null,
+                    Series = (!String.IsNullOrWhiteSpace(series)) ? series : null,
+                    Subcategory = (!String.IsNullOrWhiteSpace(subcategory.Trim())) ? subcategory : null,
+                    Target = (!String.IsNullOrWhiteSpace(target.Trim())) ? target : null
+                });
+                db.SaveChanges();
                 return true;
             }
         }
