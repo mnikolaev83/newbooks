@@ -249,14 +249,20 @@ namespace NewBookAPI.Controllers
                     Include(x => x.Category).
                     Where(
                     x =>
-                    ((model.category_id > 0) ? x.Category.Id == model.category_id : true) &&
+                    model.category_id > 0 ? x.Category.Id == model.category_id : true &&
+                    !String.IsNullOrWhiteSpace(publisher) && !String.IsNullOrWhiteSpace(x.Publisher) ? x.Publisher.Trim() == publisher.Trim() : true &&
+                    !String.IsNullOrWhiteSpace(series) && !String.IsNullOrWhiteSpace(x.Series) ? x.Series.Trim() == series.Trim() : true &&
+                    !String.IsNullOrWhiteSpace(subcategory) && !String.IsNullOrWhiteSpace(x.Subcategory) ? x.Subcategory.Trim() == subcategory.Trim() : true &&
+                    !String.IsNullOrWhiteSpace(target) && !String.IsNullOrWhiteSpace(x.Target) ? x.Target.Trim() == target.Trim() : true &&
                     (
-                        ((!String.IsNullOrWhiteSpace(publisher) && !String.IsNullOrWhiteSpace(x.Publisher))) ? x.Publisher.Trim() == publisher.Trim() : true) &&
-                    (((!String.IsNullOrWhiteSpace(series) && !String.IsNullOrWhiteSpace(x.Series))) ? x.Series.Trim() == series.Trim() : true) &&
-                    (((!String.IsNullOrWhiteSpace(subcategory) && !String.IsNullOrWhiteSpace(x.Subcategory))) ? x.Subcategory.Trim() == subcategory.Trim() : true) &&
-                    (((!String.IsNullOrWhiteSpace(target) && !String.IsNullOrWhiteSpace(x.Target))) ? x.Target.Trim() == target.Trim() : true)
-                    ).
-                    FirstOrDefault();
+                        !String.IsNullOrWhiteSpace(target) && !String.IsNullOrWhiteSpace(x.Target) && x.Target.Trim() == target.Trim() ||
+                        model.category_id > 0 && x.Category.Id == model.category_id ||
+                        !String.IsNullOrWhiteSpace(publisher) && !String.IsNullOrWhiteSpace(x.Publisher) && x.Publisher.Trim() == publisher.Trim() ||
+                        !String.IsNullOrWhiteSpace(series) && !String.IsNullOrWhiteSpace(x.Series) && x.Series.Trim() == series.Trim() ||
+                        !String.IsNullOrWhiteSpace(subcategory) && !String.IsNullOrWhiteSpace(x.Subcategory) && x.Subcategory.Trim() == subcategory.Trim() ||
+                        !String.IsNullOrWhiteSpace(target) && !String.IsNullOrWhiteSpace(x.Target) && x.Target.Trim() == target.Trim()
+                    )
+                    ).FirstOrDefault();
                 if (existingItem != null)
                     return true;
                 db.IgnoreList.Add(new IgnoreItem()

@@ -16,7 +16,7 @@ export class Home extends Component {
         var day = date.getDay();
         var prevMonday;
         prevMonday = new Date().setDate(date.getDate() - day - 7 + 1);
-        return prevMonday;
+        return new Date(prevMonday);
     }
 
     static displayName = Home.name;
@@ -27,17 +27,26 @@ export class Home extends Component {
         fetch('http://newbooksapi/api/categories')
             .then(response => response.json())
             .then(data => {
-                this.setState({ categories: data, categoryId: data[0].id });
+                var newState = this.state;
+                newState.categories = data;
+                newState.categoryId = data[0].id;
+                this.setState(newState);
             });
     }
     handleCategoryChange(event) {
-        this.setState({ categoryId: event.target.value });
+        var newState = this.state;
+        newState.categoryId = event.target.value;
+        this.setState(newState);
     }
     handleDateFromChange(date) {
-        this.setState({ dateFrom: date });
+        var newState = this.state;
+        newState.dateFrom = date;
+        this.setState(newState);
     }
     handleDateToChange(date) {
-        this.setState({ dateTo: date });
+        var newState = this.state;
+        newState.dateTo = date;
+        this.setState(newState);
     }
     dataUpdate(event) {
         var encodedDateFrom = encodeURIComponent(dateFormat(this.state.dateFrom, "yyyy-mm-dd"));
@@ -58,8 +67,17 @@ export class Home extends Component {
                         booksFavoriteCounter++;
                     }
                 }
-                this.setState({ books: data, booksIgnored: booksIgnoredCounter, booksShown: booksShownCounter, booksFavorite: booksFavoriteCounter });
-
+                var newState = this.state;
+                newState.books = data;
+                newState.booksIgnored = booksIgnoredCounter;
+                newState.booksShown = booksShownCounter;
+                newState.booksFavorite = booksFavoriteCounter;
+                for (var i = 0; i < this.state.categories.length; i++) {
+                    if (parseInt(this.state.categories[i].id) === parseInt(this.state.categoryId)) {
+                        newState.categoryName = this.state.categories[i].category_name;
+                    }
+                }
+                this.setState(newState);
             });
     }
     createBooks() {
@@ -68,7 +86,7 @@ export class Home extends Component {
         for (let i = 0; i < this.state.books.length; i++) {
             if (!this.state.books[i].is_ignored) {
                 books.push(
-                    <Book data={this.state.books[i]} number={counter + 1} />
+                    <Book key={this.state.books[i].id} data={this.state.books[i]} number={counter + 1} />
                 )
                 counter++;
             }
@@ -78,10 +96,6 @@ export class Home extends Component {
     render() {
         return (
             <div>
-                <div className="ignore-list-popup hidden">
-                    <div className="popup-fade">
-                    </div>
-                </div>
                 <div className="top-form row">
                     <div className="col-sm-4">
                         Категория:
@@ -114,6 +128,9 @@ export class Home extends Component {
                         <span className="booksFavorite">Отмечен: {this.state.booksFavorite}</span>
                     </div>
                 </div>
+                <div className={this.state.booksShown > 0 ? 'hidden' : 'book-area empty-book-area'}>
+                    Список пуст ({this.state.categoryName})
+                    </div>
                 <div className="book-area">
                     {this.createBooks()}
                 </div>
