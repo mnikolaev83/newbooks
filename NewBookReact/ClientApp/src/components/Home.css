@@ -1,4 +1,5 @@
-﻿button {
+﻿
+button {
     cursor: pointer
 }
 
@@ -7,20 +8,70 @@ body {
     position: relative;
 }
 
+h3 {
+    line-height: 0.8vw;
+}
+
 .hidden {
     display: none !important;
 }
 
+div.main-wait {
+    z-index: 23000 !important;
+    min-height: 100%;
+    height: 100vh;
+    min-width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: white;
+    cursor: wait;
+    opacity: 0.9;
+}
+
+.top-nav-menu {
+    min-height: 2vw;
+    z-index: 10000;
+    background-color: #004400;
+    color: white;
+    padding-top: 0.1vw;
+    padding-left: 0.4vw;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    font-size: 1vw;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+    padding-left: 0.4vw;
+    border-top: 2px solid black;
+}
+
+    .top-nav-menu button {
+        color: white;
+        font-weight: bold;
+        font-size: 0.6vw;
+        background-color: transparent;
+        margin-right: 1vw;
+        border: 1px solid #ffffff;
+    }
+
+        .top-nav-menu button.disabled {
+            border: 1px solid #559955;
+            color: #559955;
+        }
+
+
 .top-form {
-    min-height: 50px;
+    min-height: 3.5vw;
     z-index: 10000;
     background-color: #004400;
     border-bottom: 2px solid black;
     color: white;
-    padding-top: 15px;
-    padding-left: 30px;
+    padding-top: 1.2vw;
+    padding-left: 0.4vw;
     position: fixed;
-    top: 0;
+    top: 0vw;
     left: 0;
     width: 100%;
     font-size: 1vw;
@@ -63,12 +114,34 @@ img.book_cover {
 }
 
 div.book-area {
-    padding-top: 70px;
+    padding-top: 4vw;
+    padding-bottom: 2vw;
     background-color: #eeffee;
+    min-height: 100vh;
 }
 div.book-area.empty-book-area {
-    min-height: 100vh;
     text-align: center;
+}
+    div.book-area.ignore-area {
+        background-color: #ffeeee;
+    }
+
+
+    div.book-area.favorite-area {
+        background-color: #eeffff;
+    }
+
+div.category-name {
+    margin-top: 0.3vw;
+    margin-bottom: 1vw;
+}
+
+div.category-name span {
+    font-size: 1vw;
+    padding: 0.3vw;
+    background-color: #004400;
+    color: #eeffee;
+    font-weight: bold;
 }
 
 span.author-name {
@@ -94,6 +167,13 @@ span.target {
     color: #aaaaaa;
 }
 
+span.translated {
+    text-decoration: none;
+    font-size: 1vw;
+    font-style: italic;
+    color: #000000;
+}
+
 
 span.publisher {
     font-weight: bold;
@@ -101,6 +181,21 @@ span.publisher {
     font-size: 0.8vw;
     color: #000000;
 }
+
+span.year {
+    font-weight: bold;
+    text-decoration: none;
+    font-size: 0.8vw;
+    color: #aaaaaa;
+}
+
+span.pages_amnt {
+    font-weight: bold;
+    text-decoration: none;
+    font-size: 0.8vw;
+    color: #aaaaaa;
+}
+
 
 span.series {
     margin-left: 1vw;
@@ -131,6 +226,45 @@ div.book {
 
     div.book.favorite {
         background-color: #AAFFFF;
+    }
+
+div.wishlist-item {
+    margin-right: 0px !important;
+    margin-left: 0.2vw;
+    padding: 1vw;
+    border-bottom: 3px solid #55aa55
+}
+
+
+div.table-list-item {
+    margin-right: 0px !important;
+    border-bottom: 3px solid #55aa55;
+    font-size: 0.9vw;
+    line-height: 1vw;
+    padding-top: 0.5vw;
+    padding-bottom: 0.5vw;
+    padding-left: 1.5vw; 
+}
+
+div.table-list-item.ignore {
+    border-bottom: 3px solid #aa5555;
+}
+    div.table-list-item.favorite {
+        border-bottom: 3px solid #55aaaa;
+    }
+
+
+    div.table-list-item.header {
+        font-weight: bold;
+        font-size: 1vw;
+        padding-bottom: 1vw;
+    }
+
+    div.table-list-item > div.trash {
+        cursor: pointer;
+        text-align: right;
+        padding-top: 0.5vw;
+        padding-left: 2vw;
     }
 
 span.booksShown {
@@ -209,4 +343,38 @@ div.popup-book-ignore {
 
 div.popup-book-ignore .row {
     padding: 5px;
+}
+
+div.popup-book-favorite {
+    z-index: 21000 !important;
+    min-height: 40vh;
+    min-width: 50vw;
+    position: absolute;
+    top: 30vh;
+    left: 25vw;
+    background-color: #eeffff;
+    border: 5px solid #004444;
+    padding: 15px;
+    position: fixed;
+}
+
+    div.popup-book-favorite button {
+        background-color: #004444;
+        border: 2px solid #ffffff;
+        color: white;
+        font-weight: bold;
+        padding: 5px;
+        font-size: 0.8vw;
+    }
+
+    div.popup-book-favorite .row {
+        padding: 5px;
+    }
+
+div.even-row {
+    background-color: #ddeedd;
+}
+
+div.error {
+    color: #FF0000;
 }

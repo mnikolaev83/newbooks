@@ -174,13 +174,104 @@ namespace NewBookAPI.Controllers
                 return result;
             }
         }
+        [Route("ignored")]
+        [HttpGet]
+        public IEnumerable<IgnoreListItemModel> IgnoreList()
+        {
+            using (var db = new BookDBContext())
+            {
+                var ignoreList = db.IgnoreList.Include(x => x.Category).ToList();
+                var result = new List<IgnoreListItemModel>();
+                foreach (var item in ignoreList)
+                    result.Add(new IgnoreListItemModel()
+                    {
+                        id = item.Id,
+                        category_name = item.Category != null ? item.Category.Name : String.Empty,
+                        publisher = item.Publisher,
+                        series = item.Series,
+                        subcategory = item.Subcategory,
+                        target = item.Target
+                    });
+                return result;
+            }
+        }
+        [Route("favorites")]
+        [HttpGet]
+        public IEnumerable<FavoriteListItemModel> FavoriteList()
+        {
+            using (var db = new BookDBContext())
+            {
+                var favoriteList = db.FavoriteList.Include(x => x.Category).ToList();
+                var result = new List<FavoriteListItemModel>();
+                foreach (var item in favoriteList)
+                    result.Add(new FavoriteListItemModel()
+                    {
+                        id = item.Id,
+                        category_name = item.Category != null ? item.Category.Name : String.Empty,
+                        publisher = item.Publisher,
+                        series = item.Series,
+                        subcategory = item.Subcategory,
+                        target = item.Target
+                    });
+                return result;
+            }
+        }
+        [Route("wishlist")]
+        [HttpGet]
+        public IEnumerable<BookModel> ListWishList()
+        {
+            using (var db = new BookDBContext())
+            {
+                var wishList = db.WishList.
+                    Include(x => x.Book).
+                    Include(x => x.Book.Category).
+                    ToList();
+
+                var wishBooks = new List<Book>();
+                if (wishList.Count > 0)
+                {
+                    wishBooks = wishList.Select(x => x.Book).ToList();
+                    wishBooks = wishBooks.OrderBy(x => x.Category.Name).
+                        ThenBy(x => x.Subcategory).
+                        ThenBy(x => x.AuthorFullName).
+                        ThenBy(x => x.Title).
+                        ToList();
+                }
+                var result = new List<BookModel>();
+                foreach (var book in wishBooks)
+                {
+                    result.Add(new BookModel()
+                    {
+                        added_at = book.DateAddedToStore < DateTime.Now.AddYears(-20) ? book.AddedAt.ToShortDateString() : book.DateAddedToStore.ToShortDateString(),
+                        author_name = String.IsNullOrWhiteSpace(book.AuthorFullName) ? book.AuthorShortName : book.AuthorFullName,
+                        category_id = book.Category.Id,
+                        category_name = book.Category.Name,
+                        description = book.Description,
+                        id = book.Id,
+                        image_url = book.ImageURL,
+                        isbn = book.Isbn,
+                        pages_amnt = book.PagesAmnt,
+                        publisher = book.Publisher,
+                        run_amnt = book.RunAmnt,
+                        series = book.Series,
+                        store_code = book.StoreCode,
+                        subcategory = book.Subcategory,
+                        target = book.Target,
+                        title = book.Title,
+                        translated = book.Translated,
+                        updated_at = book.UpdatedAt.ToShortDateString(),
+                        year = book.Year
+                    });
+                }
+                return result;
+            }
+        }
         [Route("categories")]
         [HttpGet]
         public IEnumerable<CategoryModel> Categories()
         {
             using (var db = new BookDBContext())
             {
-
                 var categories = db.Categories.ToList();
                 var result = new List<CategoryModel>();
                 foreach (var category in categories.OrderBy(x => x.Order).ToList())
@@ -220,9 +311,85 @@ namespace NewBookAPI.Controllers
                 {
                     db.WishList.Remove(wish);
                     db.SaveChanges();
-
                 }
                 return true;
+            }
+        }
+        [Route("ignore_remove")]
+        [HttpGet]
+        public bool RemoveFromIgnoreList(int id)
+        {
+            using (var db = new BookDBContext())
+            {
+                var item = db.IgnoreList.Where(x => x.Id == id).FirstOrDefault();
+                if (item != null)
+                {
+                    db.IgnoreList.Remove(item);
+                    db.SaveChanges();
+                }
+                return true;
+            }
+        }
+        [Route("favorites_remove")]
+        [HttpGet]
+        public bool RemoveFromFavorites(int id)
+        {
+            using (var db = new BookDBContext())
+            {
+                var item = db.FavoriteList.Where(x => x.Id == id).FirstOrDefault();
+                if (item != null)
+                {
+                    db.FavoriteList.Remove(item);
+                    db.SaveChanges();
+                }
+                return true;
+            }
+        }
+        [Route("query_log")]
+        [HttpGet]
+        public IEnumerable<QueryLogItemModel> QueryLog()
+        {
+            using (var db = new BookDBContext())
+            {
+                var log = db.QueryLog.
+                    Include(x => x.Category).
+                    OrderByDescending(x => x.QueryAt).
+                    Take(1000).
+                    ToList();
+                var result = new List<QueryLogItemModel>();
+                foreach (var item in log)
+                    result.Add(new QueryLogItemModel()
+                    {
+                        id = item.Id,
+                        category_name = item.Category != null ? item.Category.Name : String.Empty,
+                        query_at = item.QueryAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                        period = item.DateFrom.ToString("yyyy-MM-dd") + " - " + item.DateTo.ToString("yyyy-MM-dd"),
+                        books_fetched = item.BooksFetched
+                    });
+                return result;
+            }
+        }
+        [Route("job_log")]
+        [HttpGet]
+        public IEnumerable<NewBooksLogItemModel> JobLog()
+        {
+            using (var db = new BookDBContext())
+            {
+                var log = db.JobLog.
+                    OrderByDescending(x => x.StartedAt).
+                    Take(1000).
+                    ToList();
+                var result = new List<NewBooksLogItemModel>();
+                foreach (var item in log)
+                    result.Add(new NewBooksLogItemModel()
+                    {
+                        id = item.Id,
+                        books_fetched = item.BooksFetched,
+                        completed_at = item.CompletedAt != null ? item.CompletedAt.Value.ToString("yyyy-MM-dd HH:mm:ss") : String.Empty,
+                        error_occured = item.FailedAt == null ? false : true,
+                        started_at = item.StartedAt.ToString("yyyy-MM-dd HH:mm:ss")
+                    });
+                return result;
             }
         }
         [Route("ignore")]
@@ -243,36 +410,1135 @@ namespace NewBookAPI.Controllers
                 var target = String.Empty;
                 if (!String.IsNullOrWhiteSpace(model.target))
                     target = model.target.Trim();
-
-
-                var existingItem = db.IgnoreList.
-                    Include(x => x.Category).
-                    Where(
-                    x =>
-                    model.category_id > 0 ? x.Category.Id == model.category_id : true &&
-                    !String.IsNullOrWhiteSpace(publisher) && !String.IsNullOrWhiteSpace(x.Publisher) ? x.Publisher.Trim() == publisher.Trim() : true &&
-                    !String.IsNullOrWhiteSpace(series) && !String.IsNullOrWhiteSpace(x.Series) ? x.Series.Trim() == series.Trim() : true &&
-                    !String.IsNullOrWhiteSpace(subcategory) && !String.IsNullOrWhiteSpace(x.Subcategory) ? x.Subcategory.Trim() == subcategory.Trim() : true &&
-                    !String.IsNullOrWhiteSpace(target) && !String.IsNullOrWhiteSpace(x.Target) ? x.Target.Trim() == target.Trim() : true &&
-                    (
-                        !String.IsNullOrWhiteSpace(target) && !String.IsNullOrWhiteSpace(x.Target) && x.Target.Trim() == target.Trim() ||
-                        model.category_id > 0 && x.Category.Id == model.category_id ||
-                        !String.IsNullOrWhiteSpace(publisher) && !String.IsNullOrWhiteSpace(x.Publisher) && x.Publisher.Trim() == publisher.Trim() ||
-                        !String.IsNullOrWhiteSpace(series) && !String.IsNullOrWhiteSpace(x.Series) && x.Series.Trim() == series.Trim() ||
-                        !String.IsNullOrWhiteSpace(subcategory) && !String.IsNullOrWhiteSpace(x.Subcategory) && x.Subcategory.Trim() == subcategory.Trim() ||
-                        !String.IsNullOrWhiteSpace(target) && !String.IsNullOrWhiteSpace(x.Target) && x.Target.Trim() == target.Trim()
-                    )
-                    ).FirstOrDefault();
-                if (existingItem != null)
-                    return true;
-                db.IgnoreList.Add(new IgnoreItem()
+                var categoryId = model.category_id;
+                Category category = null;
+                if (categoryId > 0)
                 {
-                    Category = (model.category_id > 0) ? db.Categories.Where(x => x.Id == model.category_id).FirstOrDefault() : null,
-                    Publisher = (!String.IsNullOrWhiteSpace(publisher)) ? publisher : null,
-                    Series = (!String.IsNullOrWhiteSpace(series)) ? series : null,
-                    Subcategory = (!String.IsNullOrWhiteSpace(subcategory.Trim())) ? subcategory : null,
-                    Target = (!String.IsNullOrWhiteSpace(target.Trim())) ? target : null
-                });
+                    category = db.Categories.Where(x => x.Id == categoryId).FirstOrDefault();
+                }
+                var itemsToRemove = new List<IgnoreItem>();
+                if (categoryId == 0 && 
+                    String.IsNullOrWhiteSpace(target) && 
+                    String.IsNullOrWhiteSpace(publisher) && 
+                    String.IsNullOrWhiteSpace(series) && 
+                    String.IsNullOrWhiteSpace(subcategory)) {
+                    return true;
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Target == target).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Target = target
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Publisher == publisher).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Publisher = publisher
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Series == series).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Subcategory == subcategory).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId && x.Target == target).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Target = target
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId && x.Publisher == publisher).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Publisher = publisher
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId && x.Series == series).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId && x.Subcategory == subcategory).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Target == target && x.Publisher == publisher).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Target = target,
+                        Publisher = publisher
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Target == target && x.Series == series).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Target = target,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Target == target && x.Subcategory == subcategory).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Target = target,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Publisher == publisher && x.Series == series).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Publisher = publisher,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Publisher == publisher && x.Subcategory == subcategory).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Publisher = publisher,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Series == series && x.Subcategory == subcategory).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId && 
+                        x.Target == target &&
+                        x.Publisher == publisher
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Publisher = publisher
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Series == series
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Publisher == publisher &&
+                        x.Series == series
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Publisher = publisher,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Publisher == publisher &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Publisher = publisher,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Series == series &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x => 
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Series == series
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Target = target,
+                        Publisher = publisher,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x =>
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Target = target,
+                        Publisher = publisher,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x =>
+                        x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Series == series 
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Publisher = publisher,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x =>
+                        x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Publisher = publisher,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x =>
+                        x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Series == series &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x =>
+                        x.Category.Id == categoryId &&
+                        x.Publisher == publisher &&
+                        x.Series == series &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Publisher = publisher,
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x =>
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Series == series &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Target = target,
+                        Publisher = publisher,
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.IgnoreList.
+                        Where(x =>
+                        x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Series == series &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.IgnoreList.Add(new IgnoreItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Publisher = publisher,
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                foreach (var item in itemsToRemove)
+                    db.Remove(item);
+                db.SaveChanges();
+                return true;
+            }
+        }
+        [Route("add_to_favorite")]
+        [HttpGet]
+        public bool AddToFavorite(AddToFavoriteModel model)
+        {
+            using (var db = new BookDBContext())
+            {
+                var publisher = String.Empty;
+                if (!String.IsNullOrWhiteSpace(model.publisher))
+                    publisher = model.publisher.Trim();
+                var series = String.Empty;
+                if (!String.IsNullOrWhiteSpace(model.series))
+                    series = model.series.Trim();
+                var subcategory = String.Empty;
+                if (!String.IsNullOrWhiteSpace(model.subcategory))
+                    subcategory = model.subcategory.Trim();
+                var target = String.Empty;
+                if (!String.IsNullOrWhiteSpace(model.target))
+                    target = model.target.Trim();
+                var categoryId = model.category_id;
+                Category category = null;
+                if (categoryId > 0)
+                {
+                    category = db.Categories.Where(x => x.Id == categoryId).FirstOrDefault();
+                }
+                var itemsToRemove = new List<FavoriteItem>();
+                if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    return true;
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Target == target).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Target = target
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Publisher == publisher).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Publisher = publisher
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Series == series).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Subcategory == subcategory).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId && x.Target == target).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Target = target
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId && x.Publisher == publisher).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Publisher = publisher
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId && x.Series == series).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId && x.Subcategory == subcategory).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Target == target && x.Publisher == publisher).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Target = target,
+                        Publisher = publisher
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Target == target && x.Series == series).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Target = target,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Target == target && x.Subcategory == subcategory).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Target = target,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Publisher == publisher && x.Series == series).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Publisher = publisher,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Publisher == publisher && x.Subcategory == subcategory).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Publisher = publisher,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Series == series && x.Subcategory == subcategory).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Publisher == publisher
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Publisher = publisher
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Series == series
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Publisher == publisher &&
+                        x.Series == series
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Publisher = publisher,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Publisher == publisher &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Publisher = publisher,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x => x.Category.Id == categoryId &&
+                        x.Series == series &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x =>
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Series == series
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Target = target,
+                        Publisher = publisher,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x =>
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Target = target,
+                        Publisher = publisher,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x =>
+                        x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Series == series
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Publisher = publisher,
+                        Series = series
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x =>
+                        x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Publisher = publisher,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x =>
+                        x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Series == series &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x =>
+                        x.Category.Id == categoryId &&
+                        x.Publisher == publisher &&
+                        x.Series == series &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Publisher = publisher,
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId == 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x =>
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Series == series &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Target = target,
+                        Publisher = publisher,
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                else if (categoryId > 0 &&
+                    !String.IsNullOrWhiteSpace(target) &&
+                    !String.IsNullOrWhiteSpace(publisher) &&
+                    !String.IsNullOrWhiteSpace(series) &&
+                    !String.IsNullOrWhiteSpace(subcategory))
+                {
+                    itemsToRemove = db.FavoriteList.
+                        Where(x =>
+                        x.Category.Id == categoryId &&
+                        x.Target == target &&
+                        x.Publisher == publisher &&
+                        x.Series == series &&
+                        x.Subcategory == subcategory
+                        ).
+                        ToList();
+                    db.FavoriteList.Add(new FavoriteItem()
+                    {
+                        Category = category,
+                        Target = target,
+                        Publisher = publisher,
+                        Series = series,
+                        Subcategory = subcategory
+                    });
+                    db.SaveChanges();
+                }
+                foreach (var item in itemsToRemove)
+                    db.Remove(item);
                 db.SaveChanges();
                 return true;
             }
