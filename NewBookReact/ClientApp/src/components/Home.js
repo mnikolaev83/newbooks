@@ -17,11 +17,11 @@ setDefaultLocale('ru');
 
 export class Home extends Component {
 
-    getPreviousMonday() {
+    getPreviousSunday() {
         var date = new Date();
         var day = date.getDay();
         var prevMonday;
-        prevMonday = new Date().setDate(date.getDate() - day - 7 + 1);
+        prevMonday = new Date().setDate(date.getDate() - day - 7);
         return new Date(prevMonday);
     }
     getLastSunday() {
@@ -37,7 +37,7 @@ export class Home extends Component {
     }
     constructor() {
         super();
-        var dateFrom = this.getPreviousMonday();
+        var dateFrom = this.getPreviousSunday();
         var dateTo = this.getLastSunday();
         this.state = {
             categoryId: 0,
