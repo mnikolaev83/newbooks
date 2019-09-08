@@ -252,9 +252,12 @@ namespace BookFetcher
             }
             foreach (var item in nodes)
             {
-                if (NodeHasClass(item, "pages"))
+                if (NodeHasClass(item, "tg-pagination"))
                 {
-                    foreach (var childItem in item.ChildNodes)
+					var ulNode = item.ChildNodes.Where(x => x.Name.ToLower().Equals("ul")).FirstOrDefault();
+					if (ulNode == null)
+						continue;
+                    foreach (var childItem in ulNode.ChildNodes)
                     {
                         var pageNo = TrimDigitValue(childItem.InnerText);
                         var pageNoAsInt = 0;
