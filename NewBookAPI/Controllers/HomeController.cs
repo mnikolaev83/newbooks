@@ -101,16 +101,8 @@ namespace NewBookAPI.Controllers
                 var books = db.Books.
                     Include(x => x.Category).
                     Where(x => x.Category.Id == category_id &&
-                    x.DateAddedToStore < DateTime.Now.AddYears(-10) &&
                     x.AddedAt >= dateAddedFrom && x.AddedAt <= dateAddedTo).
                     ToList();
-                books.AddRange(
-                    db.Books.
-                    Include(x => x.Category).
-                    Where(x => x.Category.Id == category_id &&
-                    x.DateAddedToStore >= DateTime.Now.AddYears(-10) &&
-                    x.DateAddedToStore >= dateAddedFrom && x.DateAddedToStore <= dateAddedTo).
-                    ToList());
 
                 var ignoreList = db.IgnoreList.
                     Include(x => x.Category).
@@ -129,11 +121,11 @@ namespace NewBookAPI.Controllers
                     wishListIds = wishList.Select(x => x.Book.Id).ToList();
 
                 var result = new List<BookModel>();
-                foreach (var book in books.OrderByDescending(x => x.DateAddedToStore).ToList())
+                foreach (var book in books.OrderByDescending(x => x.AddedAt).ToList())
                 {
                     result.Add(new BookModel()
                     {
-                        added_at = book.DateAddedToStore < DateTime.Now.AddYears(-20) ? book.AddedAt.ToShortDateString() : book.DateAddedToStore.ToShortDateString(),
+                        added_at = book.AddedAt.ToShortDateString(),
                         author_name = String.IsNullOrWhiteSpace(book.AuthorFullName) ? book.AuthorShortName : book.AuthorFullName,
                         category_id = book.Category.Id,
                         category_name = book.Category.Name,
@@ -242,7 +234,7 @@ namespace NewBookAPI.Controllers
                 {
                     result.Add(new BookModel()
                     {
-                        added_at = book.DateAddedToStore < DateTime.Now.AddYears(-20) ? book.AddedAt.ToShortDateString() : book.DateAddedToStore.ToShortDateString(),
+                        added_at = book.AddedAt.ToShortDateString(),
                         author_name = String.IsNullOrWhiteSpace(book.AuthorFullName) ? book.AuthorShortName : book.AuthorFullName,
                         category_id = book.Category.Id,
                         category_name = book.Category.Name,
