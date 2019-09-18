@@ -180,7 +180,7 @@ namespace BookFetcher
 					var imgSrcNode = imageNode.ChildNodes.Where(x => x.Name == "img").FirstOrDefault();
 					if (imgSrcNode != null)
 					{
-						bookDetails.ImageURL = ROOT_URL + imgSrcNode.
+						bookDetails.ImageURL = imgSrcNode.
 							Attributes.Where(x => x.Name == "src").
 							FirstOrDefault()?.Value;
 					}
