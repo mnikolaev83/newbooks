@@ -2,10 +2,12 @@
 using BookDataProvider.Entities;
 using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -20,6 +22,7 @@ namespace BookFetcher
 		delegate Task<bool> WebJobOperation();
 		public static int logJobId = 0;
 		public static int booksFetched = 0;
+
 		private class JobTask
 		{
 			private WebJobOperation Task { get; set; }
@@ -511,7 +514,13 @@ namespace BookFetcher
 		}
 		static void Main(string[] args)
 		{
-			var task = RunJob();
+            var builder = new ConfigurationBuilder()
+                   .SetBasePath(Directory.GetCurrentDirectory())
+                   .AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            var connectionString = configuration["connectionString"];
+            BookDBContext.SetConnectionString(connectionString);
+            var task = RunJob();
 			task.Wait();
 		}
 	}

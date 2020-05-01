@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BookDataProvider;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +15,12 @@ namespace NewBookAPI
     {
         public static void Main(string[] args)
         {
+            var builder = new ConfigurationBuilder()
+                   .SetBasePath(Directory.GetCurrentDirectory())
+                   .AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            var connectionString = configuration["connectionString"];
+            BookDBContext.SetConnectionString(connectionString);
             BuildWebHost(args).Run();
         }
 

@@ -9,15 +9,20 @@ namespace BookDataProvider
 {
     public class BookDBContext : DbContext
     {
+        private static string ConnectionString { get; set; } = String.Empty;
         public BookDBContext(DbContextOptions options) : base(options)
         {
         }
         public BookDBContext() : base()
         {
         }
+        public static void SetConnectionString(string connectionString)
+        {
+            ConnectionString = connectionString;
+        }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(@"Data Source=DESKTOP-KFK74RP\HOMEPC;Initial Catalog=NewBooks;Integrated Security=False;User ID=bookadmin;Password=bookadmin;Connect Timeout=15;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            optionsBuilder.UseSqlServer(ConnectionString);
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
