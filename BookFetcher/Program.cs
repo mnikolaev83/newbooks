@@ -178,7 +178,7 @@ namespace BookFetcher
 			var imageNodes = nodes.Where(x => x.Name == "figure").ToList();
 			foreach (var imageNode in imageNodes)
 			{
-				if (NodeHasClass(imageNode, "tg-featureimg"))
+				if (NodeHasClass(imageNode, "tg-featureimg") || NodeHasClass(imageNode, "mdk-featureimg"))
 				{
 					var imgSrcNode = imageNode.ChildNodes.Where(x => x.Name == "img").FirstOrDefault();
 					if (imgSrcNode != null)
@@ -316,10 +316,11 @@ namespace BookFetcher
 					Book book;
 					if (existingBook != null)
 					{
+						var imageURL = existingBook.ImageURL ?? string.Empty;
 						if ((existingBook.PagesAmnt > 0) &&
-							(!existingBook.ImageURL.Contains("no_foto") &&
+							(!imageURL.Contains("no_foto") &&
 							(!String.IsNullOrWhiteSpace(existingBook.AuthorFullName)) &&
-							(!String.IsNullOrWhiteSpace(existingBook.ImageURL)) &&
+							(!String.IsNullOrWhiteSpace(imageURL)) &&
 							(!String.IsNullOrWhiteSpace(existingBook.Publisher)) &&
 							(!String.IsNullOrWhiteSpace(existingBook.Subcategory)) &&
 							(existingBook.Description.Length > 10))
