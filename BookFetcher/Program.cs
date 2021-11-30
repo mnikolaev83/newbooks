@@ -137,7 +137,7 @@ namespace BookFetcher
 			var goodDescriptions = new List<HtmlNode>();
 			foreach (var item in nodes)
 			{
-				if (NodeHasClass(item, "tg-postbook"))
+				if (NodeHasClass(item, "tg-postbook") && item.ParentNode?.ParentNode != null && NodeHasClass(item.ParentNode?.ParentNode, "tg-productgrid"))
 					goodDescriptions.Add(item);
 			}
 			foreach (var description in goodDescriptions)
